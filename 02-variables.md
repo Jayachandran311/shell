@@ -1,243 +1,148 @@
-# Shell Scripting — Variables
 
-## Declaring Variables
+# Shell Scripting — Variables (Simple & Student‑Friendly)
 
+## ✅ Declaring Variables
 ```bash
-# No spaces around '='
 name="Alice"
 age=30
 pi=3.14
 
-echo $name       # Alice
-echo "$name"     # Alice (always quote variables)
-echo "${name}"   # Alice (curly braces for clarity)
+echo "$name"
+echo "${name}"
 ```
-
-> **Rule:** No spaces around `=`. `name = "Alice"` is wrong — shell treats it as a command.
+✅ **No spaces** around `=` (wrong: `name = "Alice"`).
 
 ---
 
-## Quoting Rules
+## ✅ Quoting Rules
+| Type | What it does |
+|------|--------------|
+| "double" | Expands variables (`$var`) and commands (`$( )`) |
+| 'single' | Literal text, no expansion |
+| backticks | Old command substitution |
 
-| Quote type | Behavior |
-|-----------|---------|
-| `"double"` | Expands variables and `$()` |
-| `'single'` | No expansion — literal string |
-| `` `backtick` `` | Command substitution (old style) |
-
+Examples:
 ```bash
 name="Alice"
-echo "Hello $name"    # Hello Alice
-echo 'Hello $name'    # Hello $name  (literal)
-echo "Today: $(date)" # Today: Mon Mar 30 ...
+echo "Hello $name"       # Hello Alice
+echo 'Hello $name'       # literal
 ```
 
-> **Best practice:** Always use **double quotes** around variables: `"$var"`. This prevents word splitting and glob expansion on values with spaces.
+✅ Always quote variables: `"$var"`
 
 ---
 
-## Variable Types
-
-### String Variables
+## ✅ Variable Types
+### ✅ Strings
 ```bash
 greeting="Hello World"
-echo $greeting
-echo ${#greeting}     # length: 11
+echo "$greeting"
+echo ${#greeting}   # length
 ```
 
-### Integer Variables
+### ✅ Integers
 ```bash
 count=10
-count=$((count + 1))   # arithmetic
-echo $count             # 11
+count=$((count + 1))
 
-# Or declare as integer type
 declare -i num=5
 num+=3
-echo $num    # 8
 ```
 
-### Readonly Variables (Constants)
+### ✅ Readonly
 ```bash
-readonly MAX_SIZE=100
-readonly DB_HOST="localhost"
-
-MAX_SIZE=200   # Error: readonly variable
+readonly MAX=100
 ```
 
-### Local Variables (inside functions)
+### ✅ Local (inside functions)
 ```bash
 greet() {
-    local message="Hi there"  # only exists inside this function
-    echo "$message"
+    local msg="Hi"
+    echo "$msg"
 }
 ```
 
 ---
 
-## Special Variables
+## ✅ Special Variables
+| Var | Meaning |
+|-----|---------|
+| $0 | Script name |
+| $1 $2 | First/second argument |
+| $# | Total arguments |
+| $@ | All arguments |
+| $$ | PID of script |
+| $? | Exit code of last command |
 
-| Variable | Meaning |
-|----------|---------|
-| `$0` | Script name / path |
-| `$1`, `$2`, `$3`… | Positional parameters (script arguments) |
-| `$#` | Number of arguments passed |
-| `$@` | All arguments as separate words |
-| `$*` | All arguments as a single word |
-| `$$` | PID (process ID) of current shell |
-| `$!` | PID of last background process |
-| `$?` | Exit code of last command |
-| `$-` | Current shell options |
-| `$_` | Last argument of previous command |
-
+Example:
 ```bash
-#!/usr/bin/env bash
-echo "Script: $0"
-echo "First arg: $1"
-echo "Second arg: $2"
-echo "All args: $@"
-echo "Arg count: $#"
-echo "My PID: $$"
-```
-
-Run: `./script.sh hello world`
-```
-Script: ./script.sh
-First arg: hello
-Second arg: world
-All args: hello world
-Arg count: 2
-My PID: 12345
+echo "$0 $1 $2 $# $@ $$"
 ```
 
 ---
 
-## Environment Variables
-
-Variables available to all processes. Convention: **UPPERCASE**.
-
+## ✅ Environment Variables
 ```bash
-# View all environment variables
-env
-printenv
-
-# View specific variable
 echo $HOME
 echo $PATH
-echo $USER
-echo $SHELL
-echo $PWD
-echo $OLDPWD
-
-# Set environment variable for child processes
-export MY_VAR="custom_value"
-export PATH="$PATH:/opt/myapp/bin"   # add to PATH
-
-# Remove (unset) a variable
+export MY_VAR="value"
 unset MY_VAR
 ```
 
-### Common Environment Variables
-
-| Variable | Contains |
-|----------|---------|
-| `$HOME` | Home directory (`/home/alice`) |
-| `$USER` | Current username |
-| `$PATH` | Colon-separated list of directories for commands |
-| `$PWD` | Current working directory |
-| `$SHELL` | Path to current shell |
-| `$EDITOR` | Default text editor |
-| `$LANG` | System language/locale |
-| `$TERM` | Terminal type |
-| `$HOSTNAME` | System hostname |
+Common ones:
+- `$USER`
+- `$SHELL`
+- `$PWD`
+- `$EDITOR`
 
 ---
 
-## Variable Substitution (Parameter Expansion)
-
+## ✅ Parameter Expansion
 ```bash
 name="Alice"
-
-# Default value — use default if variable is empty/unset
-echo "${name:-Guest}"        # Alice (name is set)
-unset name
-echo "${name:-Guest}"        # Guest (name is unset)
-
-# Assign default — set variable if unset
-echo "${name:=DefaultUser}"  # DefaultUser (and sets $name)
-echo $name                   # DefaultUser
-
-# Error if unset
-echo "${name:?Variable name is required}"
-
-# Use alternate — use VALUE if variable IS set
-echo "${name:+[logged in as $name]}"
+echo ${name:-Guest}     # default value
+echo ${name:=Default}   # set if empty
+echo ${name:?Required}  # error if empty
 ```
 
 ---
 
-## String Operations
-
+## ✅ String Operations
 ```bash
-str="Hello, World!"
+str="Hello World"
 
-echo ${#str}           # Length: 13
+echo ${#str}        # length
 
-echo ${str:7}          # World!  (from index 7)
-echo ${str:7:5}        # World   (5 chars from index 7)
+echo ${str:6}       # substring
+echo ${str,,}       # lowercase
+echo ${str^^}       # uppercase
 
-echo ${str,,}          # hello, world!  (lowercase)
-echo ${str^^}          # HELLO, WORLD!  (uppercase)
-echo ${str^}           # Hello, world!  (capitalize first)
-
-# Remove prefix
-file="image.jpg"
-echo ${file%.jpg}      # image  (remove .jpg suffix)
-echo ${file#*.}        # jpg    (remove up to first dot)
-
-# Replace
-greeting="Hello World"
-echo ${greeting/World/Bash}    # Hello Bash (first match)
-echo ${greeting//l/L}          # HeLLo WorLd (all matches)
+echo ${str/World/Bash}  # replace
 ```
 
 ---
 
-## Arrays (Basics)
-
-> Covered in detail in Lesson 07. Quick intro here:
-
+## ✅ Arrays (Basics)
 ```bash
 fruits=("apple" "banana" "cherry")
-
-echo ${fruits[0]}        # apple
-echo ${fruits[@]}        # all elements
-echo ${#fruits[@]}       # count: 3
+echo ${fruits[0]}
+echo ${fruits[@]}
+echo ${#fruits[@]}
 ```
 
 ---
 
-## Storing Command Output
-
+## ✅ Capture Command Output
 ```bash
-today=$(date)              # preferred: $( )
-today=`date`               # old style: backticks (avoid)
-
+today=$(date)
 files=$(ls /etc | wc -l)
-echo "Files in /etc: $files"
-
-# Multi-line output
-users=$(cat /etc/passwd | cut -d: -f1)
-echo "$users"              # quote to preserve newlines
 ```
 
 ---
 
-## Key Takeaways
-
-> - No spaces around `=` when assigning variables
-> - Always quote variables with `"$var"` to avoid issues with spaces
-> - Use `readonly` for constants that shouldn't change
-> - Use `local` inside functions to avoid polluting global scope
-> - `export` makes a variable available to child processes
-> - `$1`, `$2`, `$#`, `$@` are used to handle script arguments
+## ✅ Key Takeaways
+- No spaces around `=`
+- Always quote variables: `"$var"`
+- Use `local` inside functions
+- Use `export` to pass variables to child processes
+- `$1`, `$2`, `$@`, `$#` help handle script arguments
