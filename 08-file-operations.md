@@ -1,288 +1,197 @@
-# Shell Scripting — File Operations
 
-## Checking Files and Directories
+# Shell Scripting — File Operations (Simple & Student‑Friendly)
 
+## ✅ Checking Files & Directories
 ```bash
-# Does it exist?
-if [ -e "$path" ]; then echo "exists"; fi
-if [ -f "$path" ]; then echo "is a regular file"; fi
-if [ -d "$path" ]; then echo "is a directory"; fi
-if [ -L "$path" ]; then echo "is a symbolic link"; fi
-if [ -s "$path" ]; then echo "file is non-empty"; fi
-if [ -r "$path" ]; then echo "readable"; fi
-if [ -w "$path" ]; then echo "writable"; fi
-if [ -x "$path" ]; then echo "executable"; fi
+[ -e "$path" ] && echo "exists"
+[ -f "$path" ] && echo "regular file"
+[ -d "$path" ] && echo "directory"
+[ -L "$path" ] && echo "symlink"
+[ -s "$path" ] && echo "non‑empty"
+[ -r "$path" ] && echo "readable"
+[ -w "$path" ] && echo "writable"
+[ -x "$path" ] && echo "executable"
 ```
 
 ---
-
-## Reading Files
-
-### Read entire file
-
+## ✅ Reading Files
+### Print whole file
 ```bash
-# Print contents
 cat file.txt
-
-# Store in variable
 content=$(cat file.txt)
 echo "$content"
-
-# Read with head/tail
-head -n 5 file.txt      # first 5 lines
-tail -n 5 file.txt      # last 5 lines
-tail -f logfile.log     # follow (watch live updates)
 ```
 
-### Read file line by line (best practice)
+### Head/tail
+```bash
+head -n 5 file.txt
+tail -n 5 file.txt
+tail -f logfile.log
+```
 
+### Read line‑by‑line
 ```bash
 while IFS= read -r line; do
     echo "Line: $line"
-done < "file.txt"
-
-# Skip empty lines and comments
-while IFS= read -r line; do
-    [[ -z "$line" || "$line" == \#* ]] && continue
-    echo "Processing: $line"
-done < "config.txt"
-
-# With line numbers
-lineno=0
-while IFS= read -r line; do
-    (( lineno++ ))
-    echo "$lineno: $line"
-done < "file.txt"
+done < file.txt
 ```
 
-### Read fields (CSV/TSV)
-
+Skip blanks/comments:
 ```bash
-# Colon-separated (like /etc/passwd)
-while IFS=: read -r user pass uid gid comment home shell; do
-    echo "User: $user, Home: $home"
-done < /etc/passwd
+while IFS= read -r line; do
+    [[ -z "$line" || "$line" == \#* ]] && continue
+    echo "$line"
+done < config.txt
+```
 
-# CSV
+CSV/TSV:
+```bash
 while IFS=',' read -r name age city; do
-    echo "Name: $name, Age: $age, City: $city"
+    echo "$name — $city"
 done < data.csv
 ```
 
 ---
-
-## Writing Files
-
+## ✅ Writing Files
 ```bash
-# Overwrite (or create)
-echo "Hello, World" > output.txt
+echo "Hello" > out.txt      # overwrite
+echo "More" >> out.txt     # append
+```
 
-# Append
-echo "Another line" >> output.txt
-
-# Multiple lines with heredoc
-cat > config.txt << EOF
-[database]
-host = localhost
-port = 5432
-name = mydb
-EOF
-
-# Append with heredoc
-cat >> config.txt << EOF
+Heredoc:
+```bash
+cat > config.ini << EOF
 [server]
-port = 8080
+port=8080
 EOF
+```
 
-# Write with printf
-printf "Name: %s\nAge: %d\n" "Alice" 30 > info.txt
+printf:
+```bash
+printf "Name: %s
+Age: %d
+" "Alice" 30 > info.txt
 ```
 
 ---
-
-## Copying, Moving, Renaming Files
-
+## ✅ Copying, Moving, Renaming
 ```bash
-cp source.txt dest.txt          # copy file
-cp -r source_dir/ dest_dir/     # copy directory recursively
-cp -p file.txt backup/          # preserve permissions & timestamps
-cp -u *.sh scripts/             # copy only if newer
+cp a.txt b.txt
+cp -r src/ backup/
+cp -p file.txt saved/
+cp -u *.sh scripts/
 
-mv old.txt new.txt              # rename
-mv file.txt /tmp/               # move to directory
-mv *.log /var/log/myapp/        # move multiple files
+mv old new
+mv file.txt /tmp/
 
-# Safe rename using variable
-for file in *.jpeg; do
-    mv "$file" "${file%.jpeg}.jpg"
-done
+for f in *.jpeg; do mv "$f" "${f%.jpeg}.jpg"; done
 ```
 
 ---
-
-## Deleting Files
-
+## ✅ Deleting Files
 ```bash
-rm file.txt                     # delete file
-rm -f file.txt                  # force delete (no error if missing)
-rm -r directory/                # delete directory recursively
-rm -rf directory/               # force-delete entire directory tree
+rm file.txt
+rm -f file.txt
+rm -r dir/
+rm -rf dir/
+```
 
-# Safe deletion — check first
-if [ -f "$file" ]; then
-    rm "$file"
-    echo "Deleted $file"
-fi
-
-# Use trash instead of rm (safer)
-# alias rm='trash'  (if trash-cli is installed)
+Safe delete:
+```bash
+[ -f "$file" ] && rm "$file"
 ```
 
 ---
-
-## Creating Directories
-
+## ✅ Creating Directories
 ```bash
-mkdir mydir                     # create directory
-mkdir -p path/to/nested/dir     # create with all parents
-mkdir -m 755 mydir              # with specific permissions
-mkdir -p logs/{2024,2025}/{jan,feb,mar}  # create multiple
+mkdir mydir
+mkdir -p a/b/c
+mkdir -m 755 secure_dir
+mkdir -p logs/{2024,2025}/{jan,feb,mar}
 ```
 
 ---
-
-## Finding Files
-
+## ✅ Finding Files
 ```bash
-# Basic find
-find /path -name "*.log"                    # by name
-find /path -name "*.sh" -type f             # files only
-find /path -type d                          # directories only
-find . -name "*.tmp" -newer reference.txt   # newer than a file
+find . -name "*.log"
+find . -name "*.sh" -type f
+find /var/log -size +100M
+find . -mtime -1          # modified last 1 day
+```
 
-# Find and execute
+Find + exec:
+```bash
 find . -name "*.sh" -exec chmod +x {} \;
-find /tmp -name "*.tmp" -delete             # delete found files
-find . -type f -exec md5sum {} \;
+find . -name "*.tmp" -delete
+```
 
-# Find by size
-find /var/log -size +100M                   # larger than 100MB
-find /var/log -size +10k -size -100k        # between 10k and 100k
-
-# Find by modification time
-find /etc -mtime -1           # modified in last 1 day
-find /var/log -mtime +30      # not modified in 30+ days
-find . -newer file.txt        # newer than file.txt
-
-# Find and process with xargs (faster than -exec for many files)
-find . -name "*.log" | xargs grep "ERROR"
-find . -name "*.sh" | xargs chmod +x
-find /tmp -name "*.tmp" | xargs rm -f
+xargs (faster):
+```bash
+find . -name "*.log" | xargs grep ERROR
 ```
 
 ---
-
-## Temporary Files
-
+## ✅ Temporary Files
 ```bash
-# Create unique temp file
 tmpfile=$(mktemp)
 tmpdir=$(mktemp -d)
 
-echo "Using tempfile: $tmpfile"
-echo "Data to process" > "$tmpfile"
+echo "Data" > "$tmpfile"
 
-# Clean up temp files on exit (using trap)
 cleanup() {
-    rm -f "$tmpfile"
-    rm -rf "$tmpdir"
+  rm -f "$tmpfile"
+  rm -rf "$tmpdir"
 }
-trap cleanup EXIT    # runs on script exit (normal or error)
-
-# Processing
-process_file "$tmpfile"
+trap cleanup EXIT
 ```
 
 ---
-
-## File Path Operations
-
+## ✅ File Path Operations
 ```bash
-filepath="/home/alice/documents/report.pdf"
+filepath="/home/alice/report.pdf"
 
-dirname  "$filepath"     # /home/alice/documents
+dirname "$filepath"      # /home/alice
 basename "$filepath"     # report.pdf
-basename "$filepath" .pdf  # report  (strip extension)
+basename "$filepath" .pdf   # report
+```
 
-# Pure bash parameter expansion
-echo "${filepath%/*}"    # /home/alice/documents  (dirname)
-echo "${filepath##*/}"   # report.pdf              (basename)
-echo "${filepath##*.}"   # pdf                     (extension)
-echo "${filepath%.*}"    # /home/alice/documents/report  (no ext)
+Using bash only:
+```bash
+echo "${filepath%/*}"     # dirname
+echo "${filepath##*/}"    # basename
+echo "${filepath##*.}"    # ext
+echo "${filepath%.*}"     # remove ext
 ```
 
 ---
-
-## Archiving Files
-
+## ✅ Archiving Files
 ```bash
-# Create tar archive
-tar -czf archive.tar.gz directory/         # gzip compressed
-tar -cjf archive.tar.bz2 directory/        # bzip2 compressed
-tar -caf archive.tar.xz directory/         # xz compressed
-
-# Extract
-tar -xzf archive.tar.gz                    # extract gzip
-tar -xzf archive.tar.gz -C /target/dir    # extract to specific dir
-tar -tzf archive.tar.gz                    # list contents
-
-# Zip
-zip -r output.zip directory/
-unzip archive.zip
-unzip archive.zip -d /target/dir
+tar -czf archive.tar.gz folder/
+tar -xzf archive.tar.gz
+zip -r out.zip folder/
+unzip out.zip
 ```
 
 ---
-
-## Practical Examples
-
-### Backup script
-
+## ✅ Practical Example — Backup
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
+SOURCE="$HOME"
+BACKUP="backup_$(date +%F).tar.gz"
 
-SOURCE="${1:-$HOME}"
-BACKUP_DIR="/backup"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-OUTFILE="$BACKUP_DIR/backup_$TIMESTAMP.tar.gz"
-
-mkdir -p "$BACKUP_DIR"
-
-echo "Backing up $SOURCE → $OUTFILE"
-tar -czf "$OUTFILE" "$SOURCE"
-echo "Done. Size: $(du -sh "$OUTFILE" | cut -f1)"
-```
-
-### Log cleanup script
-
-```bash
-#!/usr/bin/env bash
-LOG_DIR="/var/log/myapp"
-DAYS_TO_KEEP=30
-
-echo "Cleaning logs older than $DAYS_TO_KEEP days..."
-find "$LOG_DIR" -name "*.log" -mtime +$DAYS_TO_KEEP -delete
-echo "Files remaining: $(ls "$LOG_DIR" | wc -l)"
+tar -czf "$BACKUP" "$SOURCE"
+echo "Created: $BACKUP"
 ```
 
 ---
+## ✅ Practical Example — Log Cleanup
+```bash
+find /var/log/myapp -name "*.log" -mtime +30 -delete
+```
 
-## Key Takeaways
-
-> - Always quote file variables: `"$file"` — filenames can contain spaces
-> - Use `while IFS= read -r line; do ... done < file` for reliable file reading
-> - Use `mktemp` for temp files; always clean them up with `trap cleanup EXIT`
-> - `find . -name "*.log" | xargs rm` is faster than `-exec rm {} \;` for many files
-> - Use `mkdir -p` to create nested directories without error if they exist
-> - `cp -r` for directories, `cp -p` to preserve timestamps/permissions
+---
+## ✅ Key Takeaways
+- Always quote filenames: `"$file"`
+- Use `while IFS= read -r` to read files safely
+- Use `mktemp` for temporary files + `trap` for cleanup
+- `find` + `xargs` is fast for bulk operations
+- `mkdir -p` avoids errors when directories already exist
