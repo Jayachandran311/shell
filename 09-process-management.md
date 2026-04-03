@@ -1,250 +1,175 @@
-# Shell Scripting — Process Management
 
-## Running Commands in Background
+# Shell Scripting — Process Management (Simple & Student‑Friendly)
 
+## ✅ Running Commands in Background
 ```bash
-# Run in background with &
-long_running_command &
+long_running_command &    # run in background
 sleep 60 &
 
-# Get PID of last background process
-echo "Background PID: $!"
+echo "Background PID: $!"   # PID of last background job
 
-# Run in background and disown (continues even after terminal closes)
-nohup ./script.sh > output.log 2>&1 &
+nohup ./script.sh > output.log 2>&1 &  # survive terminal close
 disown $!
 ```
 
 ---
-
-## Job Control
-
+## ✅ Job Control
 ```bash
-long_task &        # send to background
-jobs               # list background jobs
-jobs -l            # with PIDs
+long_task &       # send to background
+jobs              # list jobs
+jobs -l           # show PIDs
 
-fg %1              # bring job 1 to foreground
-fg %               # bring most recent job to foreground
-bg %2              # send stopped job 2 to background
-
-# Ctrl+Z — suspend foreground process (sends it to background as stopped)
-# Ctrl+C — kill foreground process (SIGINT)
+fg %1             # bring job 1 to foreground
+bg %2             # resume job 2 in background
 ```
+Keyboard shortcuts:
+- **Ctrl+Z** → pause & send to background (stopped)
+- **Ctrl+C** → interrupt/kill foreground job
 
 ---
-
-## `wait` — Synchronize Parallel Jobs
-
+## ✅ `wait` — Wait for Processes
 ```bash
-# Start multiple background jobs
-for server in web01 web02 web03; do
-    backup_server "$server" &
-done
+backup_server web01 &
+backup_server web02 &
+wait               # wait for all
 
-# Wait for ALL background jobs to finish
-wait
-echo "All backups complete"
+echo "Done"
+```
 
-# Wait for a specific PID
+Wait for specific PID:
+```bash
 mv bigfile /archive &
-MOVE_PID=$!
-# ... do other things ...
-wait $MOVE_PID && echo "Move complete" || echo "Move failed"
+PID=$!
+wait $PID && echo "OK" || echo "Failed"
 ```
 
 ---
-
-## Signals and `trap`
-
+## ✅ Signals & `trap`
 ### Common Signals
+| Signal | Meaning |
+|--------|---------|
+| SIGINT | Ctrl+C |
+| SIGTERM | kill (default) |
+| SIGHUP | terminal closed |
+| SIGKILL | force kill, cannot be trapped |
+| EXIT | script ending |
 
-| Signal | Number | Default Action | Meaning |
-|--------|--------|---------------|---------|
-| `SIGINT` | 2 | Terminate | Ctrl+C |
-| `SIGTERM` | 15 | Terminate | `kill` default signal |
-| `SIGHUP` | 1 | Terminate | Terminal closed |
-| `SIGKILL` | 9 | Terminate | Cannot be caught |
-| `EXIT` | — | — | Script exiting (pseudo-signal) |
-
-### `trap` — Catch signals and run cleanup
-
+### Trap cleanup
 ```bash
-#!/usr/bin/env bash
-
 TMPFILE=$(mktemp)
-
 cleanup() {
-    echo "Cleaning up..."
-    rm -f "$TMPFILE"
-    echo "Done."
+  rm -f "$TMPFILE"
+  echo "Cleaned up"
 }
-
-# Run cleanup on EXIT (normal completion, error, or Ctrl+C)
 trap cleanup EXIT
+```
 
-# Or handle specific signals
+Handle specific signals:
+```bash
 trap cleanup EXIT INT TERM
-
-# Ignore a signal
-trap '' SIGINT    # ignore Ctrl+C
-
-# Restore default behavior
-trap - SIGINT     # restore default for SIGINT
-
-# Example: lock file cleanup
-LOCKFILE="/tmp/myapp.lock"
-trap "rm -f $LOCKFILE; exit" EXIT INT TERM
-
-echo $$ > "$LOCKFILE"
-echo "Running with lock: $LOCKFILE"
-# ... work ...
 ```
 
-### Graceful shutdown
-
+Ignore / restore:
 ```bash
-#!/usr/bin/env bash
+trap '' SIGINT
+trap - SIGINT
+```
+
+Graceful shutdown:
+```bash
 RUNNING=true
+shutdown(){ RUNNING=false; }
+trap shutdown SIGINT SIGTERM
 
-shutdown() {
-    echo "Received shutdown signal. Stopping..."
-    RUNNING=false
-}
-trap shutdown SIGTERM SIGINT
-
-echo "Service running (PID: $$)"
 while $RUNNING; do
-    # Main loop work
-    echo "Doing work... $(date)"
-    sleep 5
+  echo "Working..."; sleep 5
 done
-
-echo "Service stopped cleanly"
 ```
 
 ---
-
-## Sending Signals (`kill`)
-
+## ✅ Sending Signals (`kill`)
 ```bash
-kill PID             # send SIGTERM (ask to terminate)
-kill -9 PID          # send SIGKILL (force kill, cannot ignore)
-kill -TERM PID       # same as kill PID
-kill -HUP PID        # reload config (many daemons honour this)
-kill -0 PID          # check if process exists (no signal sent)
+kill PID          # SIGTERM
+kill -9 PID       # SIGKILL (force)
+kill -HUP PID     # reload
+kill -0 PID       # check if exists
 
-killall nginx        # kill all processes named 'nginx'
-pkill -f "python script.py"   # kill by process name/pattern
+killall nginx
+pkill -f "python script.py"
 ```
 
 ---
-
-## Checking Process Status
-
+## ✅ Check if Process Running
 ```bash
-# Check if a process is running
 if kill -0 $PID 2>/dev/null; then
-    echo "Process $PID is running"
+  echo "Running"
 fi
 
-# Check by name
-if pgrep nginx &>/dev/null; then
-    echo "nginx is running"
-fi
+pgrep nginx >/dev/null && echo "nginx running"
+```
 
-# Wait for a process to stop
-while kill -0 $PID 2>/dev/null; do
-    sleep 1
-done
-echo "Process stopped"
+Wait for process stop:
+```bash
+while kill -0 $PID 2>/dev/null; do sleep 1; done
 ```
 
 ---
-
-## Subshells
-
-A subshell is a child process that inherits parent variables but changes don't propagate back.
-
+## ✅ Subshells
 ```bash
 x=10
-
 (
-    x=99           # change in subshell
-    echo "Inside subshell: x=$x"
+  x=99
+  echo "Inside: $x"
 )
-
-echo "Outside subshell: x=$x"   # still 10
+echo "Outside: $x"   # still 10
 ```
 
-Common subshell uses:
+Temporary dir changes:
 ```bash
-# Change directory temporarily
-(cd /some/dir && ls -la)
-echo "Still in original dir: $(pwd)"
-
-# Process substitution
-diff <(sort file1.txt) <(sort file2.txt)
+(cd /tmp && ls)
 ```
 
----
-
-## `exec` — Replace Current Shell
-
+Process substitution:
 ```bash
-exec another_program   # replaces current shell entirely
-exec > logfile.log     # redirect all stdout to file from here on
-exec 2> errors.log     # redirect all stderr to file
-exec >> append.log     # append mode
-
-# Practical: use exec to set up logging for entire script
-exec > >(tee -a "/var/log/myapp.log") 2>&1
-echo "This goes to console AND log file"
+diff <(sort a.txt) <(sort b.txt)
 ```
 
 ---
-
-## Parallel Processing
-
+## ✅ `exec` — Replace Current Shell
 ```bash
-#!/usr/bin/env bash
+exec other_program        # replaces current shell
+exec > logfile.log        # redirect stdout for rest of script
+exec 2> errors.log        # redirect stderr
 
-process_item() {
-    local item=$1
-    echo "Processing: $item"
-    sleep 2    # simulate work
-    echo "Done: $item"
-}
+# Log everything to file
+exec > >(tee -a /var/log/app.log) 2>&1
+```
 
-# Sequential — takes n*2 seconds
-# items=("a" "b" "c" "d" "e")
-# for item in "${items[@]}"; do process_item "$item"; done
-
-# Parallel — takes ~2 seconds regardless of count
-items=("a" "b" "c" "d" "e")
+---
+## ✅ Parallel Processing
+```bash
+process(){ echo "Doing $1"; sleep 2; }
+items=(a b c d e)
 pids=()
 
 for item in "${items[@]}"; do
-    process_item "$item" &
-    pids+=($!)
+  process "$item" &
+  pids+=($!)
 done
 
-# Collect exit codes
 errors=0
 for pid in "${pids[@]}"; do
-    wait "$pid" || (( errors++ ))
+  wait $pid || ((errors++))
 done
 
-echo "Finished. Errors: $errors"
+echo "Errors: $errors"
 ```
 
 ---
-
-## Key Takeaways
-
-> - Use `&` to background a process; `wait` to synchronize
-> - Use `trap cleanup EXIT` to ensure cleanup runs on any exit path
-> - `kill PID` sends SIGTERM (polite); `kill -9 PID` sends SIGKILL (force)
-> - `pgrep nginx` / `pkill nginx` work by process name
-> - Subshells `()` inherit variables but changes don't affect parent
-> - `exec` replaces the current shell process — useful for redirecting script output
+## ✅ Key Takeaways
+- Use `&` to background a job; use `wait` to synchronize
+- `trap` ensures cleanup happens on exit/signals
+- `kill` sends signals; `kill -9` cannot be ignored
+- `pgrep` / `pkill` work by process name
+- Subshells run in `()` and don’t affect parent variables
+- `exec` replaces shell & can set global redirection
