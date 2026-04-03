@@ -1,273 +1,140 @@
-# Shell Scripting — Conditionals
 
-## The `if` Statement
+# Shell Scripting — Conditionals (Simple & Student‑Friendly)
 
+## ✅ Basic `if` Statement
 ```bash
 if [ condition ]; then
-    # commands if true
+    commands
 elif [ other_condition ]; then
-    # commands if true
+    commands
 else
-    # commands if all conditions false
+    commands
 fi
 ```
 
+✅ Always keep **spaces inside brackets**.
+
 ---
 
-## `[ ]` — The `test` command
-
-`[ condition ]` is equivalent to the `test` command. Note: **spaces inside brackets are required**.
+## ✅ `[ ]` vs `[[ ]]`
+- `[ ]` → POSIX, works in all shells
+- `[[ ]]` → bash only, safer & more powerful
 
 ```bash
-# Correct
-if [ "$name" = "Alice" ]; then
-
-# Wrong — no spaces
-if ["$name" = "Alice"]; then
+if [[ "$name" == "Alice" ]]; then echo "Hi"; fi
+if [[ "$str" =~ ^[0-9]+$ ]]; then echo "Numbers"; fi
 ```
 
 ---
 
-## `[[ ]]` — Modern bash test
-
-Bash-specific, more powerful than `[ ]`. Prefer this in bash scripts.
-
+## ✅ String Comparison
 ```bash
-if [[ "$name" == "Alice" ]]; then   # == pattern matching
-if [[ "$str" =~ ^[0-9]+$ ]]; then  # regex matching
-if [[ -f "$file" && -r "$file" ]]; then  # && supported
+if [ "$a" = "$b" ]; then echo "equal"; fi
+if [ "$a" != "$b" ]; then echo "not equal"; fi
+
+if [[ "$a" < "$b" ]]; then echo "a comes first"; fi
+if [[ -z "$a" ]]; then echo "empty"; fi
+if [[ -n "$a" ]]; then echo "not empty"; fi
 ```
 
 ---
 
-## String Comparison
-
-```bash
-str1="hello"
-str2="world"
-
-if [ "$str1" = "$str2" ]; then echo "equal"; fi       # POSIX equal
-if [ "$str1" != "$str2" ]; then echo "not equal"; fi
-
-if [[ "$str1" == "$str2" ]]; then echo "equal"; fi    # bash equal
-if [[ "$str1" < "$str2" ]]; then echo "str1 comes first alphabetically"; fi
-if [[ "$str1" > "$str2" ]]; then echo "str1 comes after"; fi
-
-# Check if string is empty / non-empty
-if [ -z "$str1" ]; then echo "empty"; fi    # -z = zero length
-if [ -n "$str1" ]; then echo "not empty"; fi  # -n = non-zero length
-```
-
----
-
-## Numeric Comparison
-
-Use `-eq`, `-ne`, `-lt`, `-le`, `-gt`, `-ge` (NOT `==`, `<`, `>` for numbers in `[ ]`):
-
-| Operator | Meaning | Example |
-|----------|---------|---------|
-| `-eq` | equal | `[ $a -eq $b ]` |
-| `-ne` | not equal | `[ $a -ne $b ]` |
-| `-lt` | less than | `[ $a -lt $b ]` |
-| `-le` | less than or equal | `[ $a -le $b ]` |
-| `-gt` | greater than | `[ $a -gt $b ]` |
-| `-ge` | greater than or equal | `[ $a -ge $b ]` |
+## ✅ Numeric Comparison
+Use: `-eq -ne -lt -le -gt -ge`
 
 ```bash
 age=25
-
-if [ $age -ge 18 ]; then
-    echo "Adult"
-else
-    echo "Minor"
-fi
-
-# With double parentheses (arithmetic context)
+if [ $age -ge 18 ]; then echo "Adult"; fi
 if (( age >= 18 )); then echo "Adult"; fi
-if (( age == 25 )); then echo "Twenty-five"; fi
 ```
 
 ---
 
-## File Test Operators
-
+## ✅ File Tests
 ```bash
-# Check file existence and type
-if [ -e "$path" ]; then   # exists (file or dir)
-if [ -f "$path" ]; then   # is a regular file
-if [ -d "$path" ]; then   # is a directory
-if [ -L "$path" ]; then   # is a symbolic link
-if [ -s "$path" ]; then   # file exists and is NOT empty
-
-# Check permissions
-if [ -r "$path" ]; then   # readable
-if [ -w "$path" ]; then   # writable
-if [ -x "$path" ]; then   # executable
-
-# Compare files
-if [ "$f1" -nt "$f2" ]; then  # f1 newer than f2
-if [ "$f1" -ot "$f2" ]; then  # f1 older than f2
-if [ "$f1" -ef "$f2" ]; then  # same file (hard link)
-```
-
-Example:
-```bash
-config="/etc/myapp/config.cfg"
-
-if [ ! -f "$config" ]; then
-    echo "Config file missing!" >&2
-    exit 1
-fi
-
-if [ ! -r "$config" ]; then
-    echo "Cannot read config file" >&2
-    exit 1
-fi
-
-echo "Config found and readable"
+if [ -e "$p" ]; then echo "exists"; fi
+if [ -f "$p" ]; then echo "file"; fi
+if [ -d "$p" ]; then echo "directory"; fi
+if [ -r "$p" ]; then echo "readable"; fi
+if [ -w "$p" ]; then echo "writable"; fi
+if [ -x "$p" ]; then echo "executable"; fi
 ```
 
 ---
 
-## Logical Operators
-
+## ✅ Logical Operators
 ```bash
 # AND
-if [ -f "$file" ] && [ -r "$file" ]; then ...   # in [ ]
-if [[ -f "$file" && -r "$file" ]]; then ...      # in [[ ]]
+if [[ -f "$f" && -r "$f" ]]; then ...; fi
 
 # OR
-if [ $x -eq 1 ] || [ $x -eq 2 ]; then ...
-if [[ $x -eq 1 || $x -eq 2 ]]; then ...
+if [[ $x -eq 1 || $x -eq 2 ]]; then ...; fi
 
 # NOT
-if [ ! -f "$file" ]; then echo "file not found"; fi
-if [[ ! "$str" =~ ^[0-9]+$ ]]; then echo "not a number"; fi
+if [[ ! -f "$f" ]]; then ...; fi
 ```
 
 ---
 
-## Practical `if` Examples
-
+## ✅ Practical Examples
+### Check root
 ```bash
-#!/usr/bin/env bash
-
-# Check if user is root
 if [[ $EUID -ne 0 ]]; then
-    echo "This script must be run as root" >&2
+    echo "Run as root" >&2
     exit 1
 fi
+```
 
-# Check if command exists
+### Check command
+```bash
 if ! command -v git &>/dev/null; then
-    echo "git is not installed"
-    exit 1
+    echo "git missing"
 fi
+```
 
-# Check if directory exists, create if not
+### Ensure directory
+```bash
 dir="/var/log/myapp"
 if [[ ! -d "$dir" ]]; then
     mkdir -p "$dir"
-    echo "Created $dir"
-fi
-
-# Validate argument
-if [[ $# -eq 0 ]]; then
-    echo "Usage: $0 <filename>"
-    exit 1
 fi
 ```
 
 ---
 
-## `case` Statement
-
-Better than chained `if/elif` when comparing one value against many patterns.
-
+## ✅ `case` Statement
+Cleaner alternative to many `elif` conditions.
 ```bash
-case "$variable" in
-    pattern1)
-        commands ;;
-    pattern2 | pattern3)    # multiple patterns with |
-        commands ;;
-    pattern*)               # wildcard
-        commands ;;
-    *)                      # default (like else)
-        commands ;;
+case "$var" in
+    yes) echo "yes" ;;
+    no) echo "no" ;;
+    maybe|not_sure) echo "uncertain" ;;
+    *) echo "unknown" ;;
 esac
 ```
 
-### Example — Day of week
-
+### Example: Day
 ```bash
-#!/usr/bin/env bash
-read -p "Enter day: " day
-
 case "$day" in
-    Monday|Tuesday|Wednesday|Thursday|Friday)
-        echo "Weekday" ;;
-    Saturday|Sunday)
-        echo "Weekend" ;;
-    *)
-        echo "Unknown day" ;;
-esac
-```
-
-### Example — File extension handler
-
-```bash
-file="report.pdf"
-
-case "$file" in
-    *.txt)  echo "Text file" ;;
-    *.pdf)  echo "PDF document" ;;
-    *.jpg|*.jpeg|*.png)  echo "Image file" ;;
-    *.sh)   echo "Shell script" ;;
-    *)      echo "Unknown type" ;;
-esac
-```
-
-### Example — Menu
-
-```bash
-#!/usr/bin/env bash
-
-echo "====== Menu ======"
-echo "1. List files"
-echo "2. Disk usage"
-echo "3. Quit"
-read -p "Choose [1-3]: " choice
-
-case "$choice" in
-    1) ls -la ;;
-    2) df -h ;;
-    3) echo "Goodbye!"; exit 0 ;;
-    *) echo "Invalid choice" ;;
+    Monday|Tuesday|Wednesday|Thursday|Friday) echo "Weekday" ;;
+    Saturday|Sunday) echo "Weekend" ;;
+    *) echo "Unknown" ;;
 esac
 ```
 
 ---
 
-## Ternary-style (short if)
-
+## ✅ One‑liners
 ```bash
-# Single line if-then
-[ -f "/etc/hosts" ] && echo "hosts file exists"
-
-# One-liner if-else using ||
+[ -f "/etc/hosts" ] && echo "exists"
 [ -f "$file" ] && echo "found" || echo "not found"
-
-# Conditional assignment
-status=$([ $exit_code -eq 0 ] && echo "OK" || echo "FAIL")
 ```
 
 ---
 
-## Key Takeaways
-
-> - Always quote variables in conditions: `"$var"`, never bare `$var`
-> - Use `[[ ]]` over `[ ]` in bash — it supports `&&`, `||`, `=~`, and `<`/`>`  
-> - Use `-eq`, `-ne`, `-lt`, etc. for numbers; `=`, `!=`, `<`, `>` for strings
-> - `-f` checks regular file, `-d` checks directory, `-e` checks either
-> - `case` is cleaner than many `elif` branches when matching one variable
-> - `&&` chains commands: second only runs if first succeeds
+## ✅ Key Takeaways
+- Quote variables: `"$var"`
+- Prefer `[[ ]]` in bash
+- Use numeric operators for numbers, string operators for strings
+- File tests: `-f`, `-d`, `-e`, `-r`, `-w`, `-x`
+- `case` simplifies multiple comparisons
